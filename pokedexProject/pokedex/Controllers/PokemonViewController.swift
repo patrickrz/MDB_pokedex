@@ -8,7 +8,7 @@
 
 import UIKit
 
-class PokemonViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UISearchBarDelegate{
+class PokemonViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UISearchBarDelegate {
 
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var pokeCollectionView: UICollectionView!
@@ -26,22 +26,23 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
         pokeCollectionView.dataSource = self
         searchBar.delegate = self
         
+        searchBar.returnKeyType = UIReturnKeyType.done
+        
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
+
         if inSearchMode {
             poke = filteredPokemon[indexPath.row]
         } else {
             poke = dataSource[indexPath.row]
         }
-        
         performSegue(withIdentifier: "PokemonDetailVC", sender: self)
     }
     
-    @IBAction func didTapSegment(segment: UISegmentedControl) {
-        return
-    }
+//    @IBAction func didTapSegment(segment: UISegmentedControl) {
+//        return
+//    }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if inSearchMode {
@@ -51,51 +52,34 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        createNameArray()
-        createURLArray()
+
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! CollectionViewCell
-    
-        
-        currIndex = indexPath.row
-        cell.pokemonNameLabel.text = nameArray[currIndex]
-        cell.configurePFP(with: urlArray[currIndex])
+        let currPoke: Pokemon!
+        if inSearchMode {
+            currPoke = filteredPokemon[indexPath.row]
+        } else {
+            currPoke = dataSource[indexPath.row]
+        }
+        cell.pokemonNameLabel.text = String(currPoke.id) + ": " + currPoke.name
+        cell.configurePFP(with: currPoke.imageUrl)
         return cell
     }
     
-    func createNameArray() -> Void {
-        if inSearchMode {
-            for filtPokemon in filteredPokemon {
-                nameArray.append(String(filtPokemon.id) + ": " + filtPokemon.name)
-            }
-        } else {
-            for pokemon in dataSource {
-                nameArray.append(String(pokemon.id) + ": " + pokemon.name)
-            }
-        }
-    }
-    
-    func createURLArray() -> Void {
-        if inSearchMode {
-            for filtPokemon in filteredPokemon {
-                urlArray.append(filtPokemon.imageUrl)
-            }
-        } else {
-        for pokemon in dataSource {
-            urlArray.append(pokemon.imageUrl)
-        }
-        }
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        view.endEditing(true)
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text == nil || searchBar.text == "" {
             inSearchMode = false
-            self.pokeCollectionView.reloadData()
+            pokeCollectionView.reloadData()
+            view.endEditing(true)
         } else {
             inSearchMode = true
         }
         let lower = searchBar.text!.lowercased()
-        filteredPokemon = dataSource.filter({$0.name.range(of: lower) != nil })
-        self.pokeCollectionView.reloadData()
+        filteredPokemon = dataSource.filter({$0.name.range(of: lower) != nil})
+        pokeCollectionView.reloadData()
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
