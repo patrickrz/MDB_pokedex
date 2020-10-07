@@ -20,9 +20,6 @@ class CollectionViewCell: UICollectionViewCell {
         }
         profilePic.loadImage(withUrl: imageUrl)
     }
-    
-    //Sets the label text to provided pokemonName
-   
 }
 
 extension UIImageView {
