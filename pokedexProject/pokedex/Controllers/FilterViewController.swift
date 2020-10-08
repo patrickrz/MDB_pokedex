@@ -9,17 +9,18 @@
 import UIKit
 
 
-//this class only passes information back!!!
 class FilterViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
 
     var pokemonArray = [Pokemon]()
     
     @IBOutlet weak var filterTypesCollectionView: UICollectionView!
     var pvc: PokemonViewController!
+        
     var possibleTypes = ["Bug", "Grass", "Dark", "Ground", "Dragon", "Ice", "Electric", "Normal", "Fairy", "Poison", "Fighting", "Psychic", "Fire", "Rock", "Flying", "Steel", "Ghost", "Water", "Unknown"]
     var selectedTypes = [String]()
     
     @IBOutlet weak var doneButton: UIButton!
+    @IBOutlet weak var resetButton: UIButton!
     
     @IBOutlet weak var filterLabel: UILabel!
     
@@ -40,6 +41,14 @@ class FilterViewController: UIViewController, UICollectionViewDelegate, UICollec
         filterTypesCollectionView.dataSource = self
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        atkSlider.value = Float(FilterMode.shared.minAtk)
+        defSlider.value = Float(FilterMode.shared.minDef)
+        healthSlider.value = Float(FilterMode.shared.minHealth)
+    }
+
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedString = indexPath.row
         if selectedTypes.contains(possibleTypes[selectedString]) {
@@ -47,7 +56,7 @@ class FilterViewController: UIViewController, UICollectionViewDelegate, UICollec
         } else {
             selectedTypes.append(possibleTypes[indexPath.row])
         }
-        print(selectedTypes)
+        filterTypesCollectionView.reloadData()
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -59,13 +68,29 @@ class FilterViewController: UIViewController, UICollectionViewDelegate, UICollec
         let currType: String!
         currType = possibleTypes[indexPath.row]
         cell.filterNameLabel.text = currType
+        if selectedTypes.contains(currType) {
+            let color = cell.backgroundColor?.withAlphaComponent(0.5)
+            cell.backgroundColor = color
+        } else {
+            let color = cell.backgroundColor?.withAlphaComponent(1.0)
+            cell.backgroundColor = color
+        }
         return cell
     }
     
-
+    
+    @IBAction func resetButtonAction(_ sender: Any) {
+        selectedTypes = [String]()
+        atkSlider.value = 0;
+        defSlider.value = 0;
+        healthSlider.value = 0;
+    }
+    
     @IBAction func doneButtonAction(_ sender: Any) {
-       // pvc.filterFromFilters(minAtk: Int(atkSlider!.value), minDef: Int(defSlider!.value), minHP: Int(healthSlider!.value), typesArray: selectedTypes)
-        navigationController?.popViewController(animated: true)
-        dismiss(animated: true, completion: nil)
+        FilterMode.shared.minAtk = Int(self.atkSlider.value)
+        FilterMode.shared.minDef = Int(self.defSlider.value)
+        FilterMode.shared.minHealth = Int(self.healthSlider.value)
+        FilterMode.shared.selectedTypes = self.selectedTypes
+            dismiss(animated: true, completion: nil)
     }
 }

@@ -27,7 +27,6 @@ class PokemonDetailVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
         nameLabel.text = pokemon.name
         pokemonImage.load(urlString: pokemon.largeimageUrl)
         pokemonNumLabel.text = "#" + String(pokemon.id)
@@ -38,11 +37,9 @@ class PokemonDetailVC: UIViewController {
         spdVal.text = String(pokemon.speed)
         defVal.text = String(pokemon.defense)
         spdefVal.text = String(pokemon.specialDefense)
-        
-
-
+    }
 }
-}
+
 extension UIImageView {
     func load(urlString: String) {
         guard let url = URL(string: urlString)else {

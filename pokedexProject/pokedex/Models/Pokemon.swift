@@ -36,6 +36,15 @@ enum PokeType:String {
     case Unknown
 }
 
+class FilterMode {
+    var minAtk: Int = 0
+    var minDef: Int = 0
+    var minHealth: Int = 0
+    var selectedTypes = [String]()
+    
+    static let shared = FilterMode()
+}
+
 class Pokemon: Decodable {
     /* Note 2:
        The image for each Pokemon is not provided, but a URL is. You should look up how to get an image from it's URL.

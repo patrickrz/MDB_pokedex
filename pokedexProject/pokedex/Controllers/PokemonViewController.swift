@@ -15,7 +15,7 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBOutlet weak var filterButton: UIButton!
     let dataSource: [Pokemon] = PokemonGenerator.getPokemonArray()
-    var filteredPokemon = [Pokemon]()
+    var filteredPokemon = PokemonGenerator.getPokemonArray()
     var nameArray = [String]()
     var urlArray = [String]()
     var currIndex: Int = 0
@@ -24,6 +24,13 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
     var isRowMode = false
     var originalRowWidth: CGFloat = 0.0
     
+    var minAtk = 0
+    var minDef = 0
+    var minHealth = 0
+    
+    
+    var selectedTypes = [String]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         pokeCollectionView.delegate = self
@@ -31,14 +38,33 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
         searchBar.delegate = self
         searchBar.returnKeyType = UIReturnKeyType.done
         
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        updateFilter()
+        pokeCollectionView.reloadData()
+    }
+        
+
+    func updateFilter() {
+        let minAtk = FilterMode.shared.minAtk
+        let minDef = FilterMode.shared.minDef
+        let minHealth = FilterMode.shared.minHealth
+        let selectedTypes = FilterMode.shared.selectedTypes
+        filteredPokemon = dataSource.filter({
+            $0.attack > minAtk && $0.defense > minDef && $0.health > minHealth })
+        if selectedTypes.count > 0 {
+            filteredPokemon = filteredPokemon.filter({
+                $0.types.contains(where: {selectedTypes.contains($0.rawValue) })})
+        }
+        
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if inSearchMode {
-            poke = filteredPokemon[indexPath.row]
-        } else {
-            poke = dataSource[indexPath.row]
-        }
+       
+        poke = filteredPokemon[indexPath.row]
         performSegue(withIdentifier: "PokemonDetailVC", sender: self)
     }
     
@@ -48,24 +74,18 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if inSearchMode {
-            return filteredPokemon.count
-        }
-        return dataSource.count
+        return filteredPokemon.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! CollectionViewCell
         let currPoke: Pokemon!
-        if inSearchMode {
-            currPoke = filteredPokemon[indexPath.row]
-        } else {
-            currPoke = dataSource[indexPath.row]
-        }
+        currPoke = filteredPokemon[indexPath.row]
         cell.pokemonNameLabel.text = String(currPoke.id) + ": " + currPoke.name
         cell.configurePFP(with: currPoke.imageUrl)
         return cell
     }
+    
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         view.endEditing(true)
@@ -73,15 +93,16 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text == nil || searchBar.text == "" {
-            inSearchMode = false
+            updateFilter()
             pokeCollectionView.reloadData()
             view.endEditing(true)
         } else {
-            inSearchMode = true
+            let lower = searchBar.text!.lowercased()
+            updateFilter()
+            filteredPokemon = filteredPokemon.filter({$0.name.lowercased().contains(lower)})
+            pokeCollectionView.reloadData()
         }
-        let lower = searchBar.text!.lowercased()
-        filteredPokemon = dataSource.filter({$0.name.lowercased().contains(lower)})
-        pokeCollectionView.reloadData()
+        
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -96,33 +117,27 @@ class PokemonViewController: UIViewController, UICollectionViewDataSource, UICol
         switch segmentedControl.selectedSegmentIndex {
             case 0:
                 isRowMode = false
-//                pokeCollectionView.collectionViewLayout.invalidateLayout()
-                print(isRowMode)
+                pokeCollectionView.collectionViewLayout.invalidateLayout()
+                break
+            
             case 1:
                 isRowMode = true
-//                pokeCollectionView.collectionViewLayout.invalidateLayout()
-                print(isRowMode)
+                pokeCollectionView.collectionViewLayout.invalidateLayout()
+                break
+                
             default:
                 break
         }
     }
     
     
-//func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-//
-//    let bounds = pokeCollectionView.bounds
-//    let heightVal = self.view.frame.height
-//    //let widthVal = self.view.frame.width
-//    let cellWidth: CGFloat
-//    originalRowWidth = self.view.frame.height
-//
-//    if isRowMode {
-//        cellWidth = bounds.width
-//        return CGSize(width: cellWidth + 5, height: heightVal)
-//    } else {
-//        return CGSize(width: originalRowWidth, height: heightVal)
-//    }
-//    }
+func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    
+    if isRowMode {
+        return CGSize(width: self.view.frame.width, height: 150)
+    }
+    return CGSize(width: (self.view.frame.width / 2) - 20 , height: (self.view.frame.width / 2) - 20)
+    }
      
 }
 
